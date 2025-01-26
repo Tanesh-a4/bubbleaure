@@ -101,7 +101,20 @@ class Example extends Phaser.Scene {
         background.setDepth(-1);
         //Show the story 
         // this.showStoryText("The Dance of Bubbles\n\nTwo magical bubbles meet in an enchanted garden,\nready to prove their worth through a friendly competition.\nThe winner shall lead the evening's bubble dance!", 4000);
-        this.showStoryText("The hero's arrives at the outskirts of the castle. The battle of love begins !", 3000);
+        // Initialize dialogue system with first scene
+        this.showDialogue([{
+            speaker: "Hero",
+            text: "At last, I've arrived at the castle gates...",
+            duration: 2000
+        }, {
+            speaker: "Rival",
+            text: "Another suitor for the princess? You'll have to prove your worth!",
+            duration: 2500
+        }, {
+            speaker: "Narrator",
+            text: "The battle of love begins in the mystical garden!",
+            duration: 2000
+        }]);
         const particles = this.add.particles('red');
         const emitter = particles.createEmitter({
             speed: 100,
@@ -180,6 +193,27 @@ class Example extends Phaser.Scene {
             fontSize: '16px',
             fill: '#ffffff'
         }).setOrigin(0.5);
+        // Add controls button
+        const controlsButton = this.add.text(600, 30, '[ Controls ]', {
+                fontSize: '20px',
+                fill: '#ffffff',
+                backgroundColor: '#000000',
+                padding: {
+                    x: 10,
+                    y: 5
+                }
+            })
+            .setInteractive()
+            .setDepth(1000)
+            .on('pointerover', function() {
+                this.setTint(0x00ff00);
+            })
+            .on('pointerout', function() {
+                this.clearTint();
+            })
+            .on('pointerdown', () => {
+                this.showControls();
+            });
         // Add round and score display
         this.roundText = this.add.text(400, 30, 'Round 1/3', {
             fontSize: '24px',
@@ -423,8 +457,8 @@ class Example extends Phaser.Scene {
             }
         });
 
-        // Spawn power-ups periodically
-        if (this.time.now > this.nextPowerUpSpawn) {
+        // Spawn power-ups periodically (only in combat rounds 1-3)
+        if (this.time.now > this.nextPowerUpSpawn && this.currentRound <= 3) {
             this.spawnPowerUp();
             this.nextPowerUpSpawn = this.time.now + Phaser.Math.Between(5000, 10000);
         }
@@ -622,7 +656,24 @@ class Example extends Phaser.Scene {
                                 this.background.setScale(scale);
                                 this.background.setDepth(-1);
                                 this.cameras.main.fadeIn(1000);
-                                this.showStoryText("The Battle of Love\n\nNext battle happens in Castle \n\nThe battle shifts to an ancient temple...", 4000);
+                                // Show round 2 dialogue sequence
+                                this.showDialogue([{
+                                    speaker: "Princess",
+                                    text: "The garden trial was just the beginning...",
+                                    duration: 2500
+                                }, {
+                                    speaker: "Hero",
+                                    text: "I'll face any challenge to prove my love!",
+                                    duration: 2500
+                                }, {
+                                    speaker: "Rival",
+                                    text: "The ancient temple's sacred grounds will test your resolve.",
+                                    duration: 2500
+                                }, {
+                                    speaker: "Narrator",
+                                    text: "The battle continues in the mystical temple grounds...",
+                                    duration: 2000
+                                }]);
                             });
                         } else if (this.currentRound === 3) {
                             // Final round in colosseum
@@ -689,7 +740,28 @@ class Example extends Phaser.Scene {
                                 this.background.setScale(scale);
                                 this.background.setDepth(-1);
                                 this.cameras.main.fadeIn(1000);
-                                this.showStoryText("The Final Showdown in the Arena\n\nIn the grand colosseum, the final battle...", 4000);
+                                // Show final round dialogue sequence
+                                this.showDialogue([{
+                                    speaker: "King",
+                                    text: "The time has come for the final trial!",
+                                    duration: 2500
+                                }, {
+                                    speaker: "Princess",
+                                    text: "Your determination has brought you far...",
+                                    duration: 2500
+                                }, {
+                                    speaker: "Hero",
+                                    text: "This is the moment to prove my true worth!",
+                                    duration: 2500
+                                }, {
+                                    speaker: "Rival",
+                                    text: "May the most worthy champion prevail!",
+                                    duration: 2500
+                                }, {
+                                    speaker: "Narrator",
+                                    text: "The final battle begins in the grand colosseum!",
+                                    duration: 2000
+                                }]);
                             });
                         }
                         // Destroy the crown before starting new round
@@ -747,6 +819,10 @@ class Example extends Phaser.Scene {
         this.cameras.main.fadeOut(1000);
         // Change to wedding music
         this.changeRoundMusic(4);
+        // Clear any existing power-ups
+        this.children.list
+            .filter(child => child.texture && child.texture.key === 'apple')
+            .forEach(apple => apple.destroy());
         this.time.delayedCall(1000, () => {
             // Clear existing objects
             if (this.background) this.background.destroy();
@@ -884,10 +960,37 @@ class Example extends Phaser.Scene {
 
             // Show the final text with delays
             this.time.delayedCall(1000, () => {
-                this.showStoryText("The hero and the princess dance together in celebration of their victory and love!", 5000);
-
-                this.time.delayedCall(6000, () => {
-                    this.showStoryText("And they lived happily ever after...\nThe kingdom was safe at last.", 4000);
+                this.showDialogue([{
+                    speaker: "King",
+                    text: "A worthy champion has emerged victorious!",
+                    duration: 3000
+                }, {
+                    speaker: "Princess",
+                    text: "Your courage and determination have won my heart.",
+                    duration: 3000
+                }, {
+                    speaker: "Hero",
+                    text: "My love for you gave me the strength to overcome every challenge.",
+                    duration: 3000
+                }, {
+                    speaker: "Narrator",
+                    text: "And so begins a new chapter in the kingdom's history...",
+                    duration: 3000
+                }, {
+                    speaker: "Narrator",
+                    text: "The hero and princess dance together, their love eternal...",
+                    duration: 3000
+                }]);
+                this.time.delayedCall(16000, () => {
+                    this.showDialogue([{
+                        speaker: "Narrator",
+                        text: "And they lived happily ever after...",
+                        duration: 3000
+                    }, {
+                        speaker: "Narrator",
+                        text: "The kingdom flourished under their loving rule.",
+                        duration: 3000
+                    }]);
 
                     this.time.delayedCall(5000, () => {
                         // Fade out everything
@@ -1115,6 +1218,105 @@ class Example extends Phaser.Scene {
                 }
             });
         });
+    }
+    showControls() {
+        const controlsText =
+            "Player 1 Controls:\n" +
+            "WASD - Movement\n" +
+            "SPACE - Attack\n" +
+            "Q - Special Ability\n\n" +
+            "Player 2 Controls:\n" +
+            "Arrow Keys - Movement\n" +
+            "SHIFT - Attack\n" +
+            "M - Special Ability\n\n" +
+            "Click anywhere to close";
+        // Pause the game
+        this.physics.pause();
+        // Create semi-transparent background
+        const bg = this.add.rectangle(400, 300, 800, 600, 0x000000, 0.8);
+        bg.setDepth(1000);
+        // Add controls text
+        const text = this.add.text(400, 300, controlsText, {
+            fontSize: '24px',
+            fill: '#ffffff',
+            align: 'center',
+            lineSpacing: 10
+        }).setOrigin(0.5).setDepth(1001);
+        // Make background clickable to close
+        bg.setInteractive();
+        bg.on('pointerdown', () => {
+            // Resume game
+            this.physics.resume();
+            // Remove controls display
+            bg.destroy();
+            text.destroy();
+        });
+    }
+    showDialogue(dialogueArray) {
+        let currentIndex = 0;
+        const showNextDialogue = () => {
+            if (currentIndex >= dialogueArray.length) {
+                this.physics.resume();
+                return;
+            }
+            const dialogue = dialogueArray[currentIndex];
+
+            // Create dialogue box with speaker name
+            const dialogueBox = this.add.rectangle(400, 500, 700, 100, 0x000000, 0.8)
+                .setDepth(1000);
+
+            const speakerText = this.add.text(70, 460, dialogue.speaker, {
+                fontSize: '24px',
+                fill: '#FFD700',
+                stroke: '#000000',
+                strokeThickness: 4
+            }).setDepth(1001);
+            const dialogueText = this.add.text(70, 490, dialogue.text, {
+                fontSize: '20px',
+                fill: '#ffffff',
+                stroke: '#000000',
+                strokeThickness: 2,
+                wordWrap: {
+                    width: 660
+                }
+            }).setDepth(1001);
+            // Add click/tap to continue indicator
+            const continueText = this.add.text(700, 530, '▼', {
+                fontSize: '24px',
+                fill: '#ffffff'
+            }).setDepth(1001);
+            // Animate continue indicator
+            this.tweens.add({
+                targets: continueText,
+                y: '+=10',
+                duration: 1000,
+                yoyo: true,
+                repeat: -1
+            });
+            // Make dialogue box clickable
+            dialogueBox.setInteractive();
+            dialogueBox.on('pointerdown', () => {
+                dialogueBox.destroy();
+                speakerText.destroy();
+                dialogueText.destroy();
+                continueText.destroy();
+                currentIndex++;
+                showNextDialogue();
+            });
+            // Auto-advance after duration
+            if (dialogue.duration) {
+                this.time.delayedCall(dialogue.duration, () => {
+                    dialogueBox.destroy();
+                    speakerText.destroy();
+                    dialogueText.destroy();
+                    continueText.destroy();
+                    currentIndex++;
+                    showNextDialogue();
+                });
+            }
+        };
+        this.physics.pause();
+        showNextDialogue();
     }
 }
 
