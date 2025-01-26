@@ -210,7 +210,7 @@ class Example extends Phaser.Scene {
             fill: '#ffffff'
         }).setOrigin(0.5);
         // Add controls button
-        const controlsButton = this.add.text(700, 30, '[ Controls ]', {
+        const controlsButton = this.add.text(600, 30, '[ Controls ]', {
                 fontSize: '20px',
                 fill: '#ffffff',
                 backgroundColor: '#000000',
