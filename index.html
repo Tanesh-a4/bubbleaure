@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bubble Game</title>
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+    canvas {
+      display: block;
+    }
+  </style>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+    }
+  
+    #background-video {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: -1; /* Sends the video behind the game canvas */
+    }
+  
+    canvas {
+      display: block;
+      position: relative;
+      z-index: 1; /* Ensures Phaser canvas is above the video */
+    }
+  </style>
+  
+</head>
+<body style="background-color: black;">
+    <!-- <video id="background-video" autoplay loop muted playsinline>
+        <source src="video.mp4" type="video/mp4" />
+        Your browser does not support the video tag.
+      </video> -->
+      
+  <script src="./js/game.js"></script>
+</body>
+</html>
+

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" preserveAspectRatio="none">
+    <rect width="800" height="600" fill="#1e3a8a" />
+    <path fill="#3b82f6" d="M0,400 C200,300 600,500 800,350 L800,600 L0,600 Z">
+        <animate 
+            attributeName="d"
+            values="M0,400 C200,300 600,500 800,350 L800,600 L0,600 Z;
+                    M0,450 C300,350 700,550 800,400 L800,600 L0,600 Z;
+                    M0,400 C200,300 600,500 800,350 L800,600 L0,600 Z"
+            dur="5s"
+            repeatCount="indefinite"
+        />
+    </path>
+</svg>
