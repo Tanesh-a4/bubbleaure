@@ -26,6 +26,22 @@ class Example extends Phaser.Scene {
     }
 
     create() {
+        // Initialize speech synthesis with enhanced voice loading
+        if ('speechSynthesis' in window) {
+            // Load and cache voices
+            const loadVoices = () => {
+                const voices = window.speechSynthesis.getVoices();
+                if (voices.length > 0) {
+                    this.gameVoices = voices;
+                    console.log('Voices loaded:', voices.length);
+                } else {
+                    // Retry if voices aren't loaded yet
+                    setTimeout(loadVoices, 100);
+                }
+            };
+            window.speechSynthesis.onvoiceschanged = loadVoices;
+            loadVoices();
+        }
         // Create layered background effect
         const background = this.add.image(400, 300, 'animatedBackground');
 
@@ -194,7 +210,7 @@ class Example extends Phaser.Scene {
             fill: '#ffffff'
         }).setOrigin(0.5);
         // Add controls button
-        const controlsButton = this.add.text(600, 30, '[ Controls ]', {
+        const controlsButton = this.add.text(700, 30, '[ Controls ]', {
                 fontSize: '20px',
                 fill: '#ffffff',
                 backgroundColor: '#000000',
@@ -1254,12 +1270,133 @@ class Example extends Phaser.Scene {
     }
     showDialogue(dialogueArray) {
         let currentIndex = 0;
+        let speaking = false;
+        const synth = window.speechSynthesis;
+
+        // Add background music for dialogues
+        const dialogueMusic = this.sound.add('round1_music', {
+            volume: 0.1,
+            loop: true
+        });
+        dialogueMusic.play();
+        const speakText = (text, speaker, currentDialogue) => {
+            if ('speechSynthesis' in window) {
+                // Cancel any ongoing speech
+                synth.cancel();
+                speaking = true;
+                const utterance = new SpeechSynthesisUtterance(text);
+                // Store speech rate for duration calculation
+                let speechRate = 1;
+                // Configure voice characteristics based on speaker
+                switch (speaker) {
+                    case "Princess":
+                        utterance.pitch = 1.4;
+                        speechRate = 0.85;
+                        break;
+                    case "Hero":
+                        utterance.pitch = 0.9;
+                        speechRate = 1.0;
+                        break;
+                    case "Rival":
+                        utterance.pitch = 0.7;
+                        speechRate = 1.1;
+                        break;
+                    case "King":
+                        utterance.pitch = 0.6;
+                        speechRate = 0.8;
+                        break;
+                    case "Narrator":
+                        utterance.pitch = 1.0;
+                        speechRate = 0.9;
+                        break;
+                }
+                utterance.rate = speechRate;
+                // Store the calculated duration in the dialogue object
+                currentDialogue.speechDuration = (text.length / 5) * 1000 / speechRate;
+                const voices = synth.getVoices();
+
+                // Set base characteristics
+                utterance.volume = 1;
+                utterance.voice = voices.find(voice => voice.lang === 'en-US') || voices[0];
+                // Configure voice characteristics based on speaker
+                switch (speaker) {
+                    case "Princess":
+                        utterance.pitch = 1.4;
+                        utterance.rate = 0.85;
+                        if (voices.length > 1) utterance.voice = voices.find(voice => voice.name.includes('female')) || voices[1];
+                        break;
+                    case "Hero":
+                        utterance.pitch = 0.9;
+                        utterance.rate = 1.0;
+                        if (voices.length > 2) utterance.voice = voices.find(voice => voice.name.includes('male')) || voices[2];
+                        break;
+                    case "Rival":
+                        utterance.pitch = 0.7;
+                        utterance.rate = 1.1;
+                        if (voices.length > 3) utterance.voice = voices[3];
+                        break;
+                    case "King":
+                        utterance.pitch = 0.6;
+                        utterance.rate = 0.8;
+                        if (voices.length > 4) utterance.voice = voices[4];
+                        break;
+                    case "Narrator":
+                        utterance.pitch = 1.0;
+                        utterance.rate = 0.9;
+                        if (voices.length > 5) utterance.voice = voices[5];
+                        break;
+                }
+
+                // Configure voice characteristics based on speaker
+                switch (speaker) {
+                    case "Princess":
+                        utterance.pitch = 1.2;
+                        utterance.rate = 0.85;
+                        break;
+                    case "Hero":
+                        utterance.pitch = 0.9;
+                        utterance.rate = 0.95;
+                        break;
+                    case "Rival":
+                        utterance.pitch = 0.8;
+                        utterance.rate = 1;
+                        break;
+                    case "King":
+                        utterance.pitch = 0.7;
+                        utterance.rate = 0.8;
+                        break;
+                    case "Narrator":
+                        utterance.pitch = 1;
+                        utterance.rate = 0.9;
+                        break;
+                }
+
+                speaking = true;
+                synth.speak(utterance);
+
+                // Handle speech completion
+                utterance.onend = () => {
+                    speaking = false;
+                };
+            }
+        };
         const showNextDialogue = () => {
             if (currentIndex >= dialogueArray.length) {
                 this.physics.resume();
+                // Fade out and stop dialogue music
+                this.tweens.add({
+                    targets: dialogueMusic,
+                    volume: 0,
+                    duration: 1000,
+                    onComplete: () => {
+                        dialogueMusic.stop();
+                    }
+                });
                 return;
             }
             const dialogue = dialogueArray[currentIndex];
+            // Start speaking the dialogue
+            speakText(dialogue.text, dialogue.speaker, dialogue);
 
             // Create dialogue box with speaker name
             const dialogueBox = this.add.rectangle(400, 500, 700, 100, 0x000000, 0.8)
@@ -1296,6 +1433,24 @@ class Example extends Phaser.Scene {
             // Make dialogue box clickable
             dialogueBox.setInteractive();
             dialogueBox.on('pointerdown', () => {
+                // Stop current speech if it's still playing
+                if (speaking) {
+                    synth.cancel();
+                    speaking = false;
+                }
+
+                // If this is the last dialogue, fade out the music
+                if (currentIndex === dialogueArray.length - 1) {
+                    this.tweens.add({
+                        targets: dialogueMusic,
+                        volume: 0,
+                        duration: 500,
+                        onComplete: () => {
+                            dialogueMusic.stop();
+                        }
+                    });
+                }
+
                 dialogueBox.destroy();
                 speakerText.destroy();
                 dialogueText.destroy();
@@ -1303,15 +1458,43 @@ class Example extends Phaser.Scene {
                 currentIndex++;
                 showNextDialogue();
             });
-            // Auto-advance after duration
+            // Sync dialogue advancement with speech
             if (dialogue.duration) {
-                this.time.delayedCall(dialogue.duration, () => {
-                    dialogueBox.destroy();
-                    speakerText.destroy();
-                    dialogueText.destroy();
-                    continueText.destroy();
-                    currentIndex++;
-                    showNextDialogue();
+                // Base duration calculation
+                let displayDuration = dialogue.duration;
+
+                // Calculate speech duration based on text length and default rate
+                const baseReadingSpeed = 5; // characters per second
+                const estimatedSpeechDuration = (dialogue.text.length / baseReadingSpeed) * 1000;
+
+                // Use the longer duration between estimated and specified
+                displayDuration = Math.max(displayDuration, estimatedSpeechDuration + 500);
+                this.time.delayedCall(displayDuration, () => {
+                    if (!speaking) {
+                        dialogueBox.destroy();
+                        speakerText.destroy();
+                        dialogueText.destroy();
+                        continueText.destroy();
+                        currentIndex++;
+                        showNextDialogue();
+                    } else {
+                        // Create a speech completion checker
+                        const checkSpeech = this.time.addEvent({
+                            delay: 100,
+                            callback: () => {
+                                if (!speaking) {
+                                    checkSpeech.destroy();
+                                    dialogueBox.destroy();
+                                    speakerText.destroy();
+                                    dialogueText.destroy();
+                                    continueText.destroy();
+                                    currentIndex++;
+                                    showNextDialogue();
+                                }
+                            },
+                            loop: true
+                        });
+                    }
                 });
             }
         };
